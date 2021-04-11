@@ -79,11 +79,40 @@ export default class ComponentBuilder {
     return this
   }
 
+  setStatusComponent() {
+    this.#status = blessed.list({
+      ...this.#baseComponent(),
+      parent: this.#layout,
+      width: "25%",
+      height: "90%",
+      items: ['{bold}User on Room{/}']
+    })
+
+    return this 
+  }
+
+  setActivityLogComponent() {
+    this.#activityLog = blessed.list({
+      ...this.#baseComponent(),
+      parent: this.#layout,
+      width: "25%",
+      height: "90%",
+      style: {
+        fg: 'yellow'
+      },
+      items: ['{bold}Activity Log{/}']
+    })
+
+    return this 
+  }
+
   build() {
     const components = {
       screen: this.#screen,
       input: this.#input,
-      chat: this.#chat
+      chat: this.#chat,
+      activityLog: this.#activityLog,
+      status: this.#status
     };
 
     return components;

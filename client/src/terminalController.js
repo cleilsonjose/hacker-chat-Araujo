@@ -1,5 +1,5 @@
 import ComponentBuilder from "./components.js";
-
+import { constants } from "./constants.js";
 
 export default class TerminalController {
   #userCollors = new Map()
@@ -39,8 +39,36 @@ export default class TerminalController {
     }
   }
 
+  #onLogChanged({ screen, activityLog}){
+    return msg => {
+      const [userName] = msg.split(/\s/)
+      const collor = this.#getUserCollors(userName)
+      activityLog.addItem(`{${collor}}{bold}${msg.toString()}{/}`)
+
+      screen.render()
+    }
+  }
+
+  #onStatusChanged({ screen, status}){
+    return users => {
+      //pega o primeiro elemento
+      const {content} = status.items.shift()
+      status.clearItems()
+      status.addItem(content)
+
+     users.forEach(userName => {
+        const collor = this.#getUserCollors(userName)
+        status.addItem(`{${collor}}{bold}${userName}{/}`)
+     })
+
+      screen.render()
+    }
+  }
+
   #registerEvents(eventEmitter, components){
-    eventEmitter.on('message:received', this.#onMessageReceived(components))
+    eventEmitter.on(constants.events.app.MESSAGE_RECEIVED, this.#onMessageReceived(components))
+    eventEmitter.on(constants.events.app.ACTIVITYLOG_UPDATED, this.#onLogChanged(components))
+    eventEmitter.on(constants.events.app.STATUS_UPDATED, this.#onStatusChanged(components))
   }
 
   async initializeTables(eventEmitter) {
@@ -49,19 +77,27 @@ export default class TerminalController {
     .setLayoutComponent()
     .setInputComponent(this.#onInputReceived(eventEmitter))
     .setChatComponent()
+    .setActivityLogComponent()
+    .setStatusComponent()
     .build()
 
     this.#registerEvents(eventEmitter, components)
 
     components.input.focus()
     components.screen.render()
-
+/** 
     //teste
     setInterval(() => {
-      eventEmitter.emit('message:received', { message: 'Oii', userName:'cleilson José'})
-      eventEmitter.emit('message:received', { message: 'Oii', userName:'juliana'})
-      eventEmitter.emit('message:received', { message: 'Olá', userName:'israel'})
-      eventEmitter.emit('message:received', { message: 'Opa', userName:'livia'})
+      const users = ['cleilson josé']
+
+      eventEmitter.emit(constants.events.app.STATUS_UPDATED, users)
+      users.push('juliana')
+      eventEmitter.emit(constants.events.app.STATUS_UPDATED, users)
+      users.push('israel', 'livia')
+      eventEmitter.emit(constants.events.app.STATUS_UPDATED, users)
+      users.push('philipe', 'guilherme')
+      eventEmitter.emit(constants.events.app.STATUS_UPDATED, users)
     },1000);
+*/  
   }
 }
